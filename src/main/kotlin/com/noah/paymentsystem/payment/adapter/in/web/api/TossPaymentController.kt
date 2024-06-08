@@ -3,7 +3,7 @@ package com.noah.paymentsystem.payment.adapter.`in`.web.api
 import com.noah.paymentsystem.common.WebAdapter
 import com.noah.paymentsystem.payment.adapter.`in`.web.request.TossPaymentRequest
 import com.noah.paymentsystem.payment.adapter.`in`.web.response.ApiResponse
-import com.noah.paymentsystem.payment.adapter.out.web.excutor.TossPaymentExecutor
+import com.noah.paymentsystem.payment.adapter.out.web.toss.excutor.TossPaymentExecutor
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
