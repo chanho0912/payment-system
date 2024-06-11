@@ -8,7 +8,7 @@ interface CheckoutUsecase {
 }
 
 data class CheckoutCommand(
-    val cardId: Long,
+    val cartId: Long,
     val productIds: List<Long>,
     val buyerId: Long,
     val idempotencyKey: String

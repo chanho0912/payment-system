@@ -1,6 +1,10 @@
 spring:
   application:
     name: payment-system
+  docker:
+    compose:
+      skip:
+        in-tests: false
 
 PSP:
   toss:

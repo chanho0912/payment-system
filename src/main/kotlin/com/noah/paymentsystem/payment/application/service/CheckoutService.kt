@@ -17,7 +17,7 @@ class CheckoutService(
     private val savePaymentPort: SavePaymentPort
 ) : CheckoutUsecase {
     override fun checkout(command: CheckoutCommand): Mono<CheckoutResult> {
-        return loadProductPort.getProduct(command.cardId, command.productIds).collectList()
+        return loadProductPort.getProduct(command.cartId, command.productIds).collectList()
             .map { products ->
                 PaymentEvent(
                     buyerId = command.buyerId,
@@ -29,7 +29,6 @@ class CheckoutService(
                             orderId = command.idempotencyKey,
                             productId = product.id,
                             amount = product.amount,
-                            buyerId = command.buyerId,
                             paymentStatus = NOT_STARTED
                         )
                     }
