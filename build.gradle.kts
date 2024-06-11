@@ -26,7 +26,10 @@ dependencies {
 	implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
+
+	testAndDevelopmentOnly("org.springframework.boot:spring-boot-docker-compose")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers:3.3.0")
+
 	runtimeOnly("com.mysql:mysql-connector-j")
 	runtimeOnly("io.asyncer:r2dbc-mysql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
