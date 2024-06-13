@@ -49,18 +49,21 @@ class R2DBCPaymentRepository(
     }
 
     companion object {
-        val INSERT_PAYMENT_EVENT_QUERY = """
-      INSERT INTO payment_events (buyer_id, order_name, order_id)
-      VALUES (:buyerId, :orderName, :orderId) 
-    """.trimIndent()
+        val INSERT_PAYMENT_EVENT_QUERY =
+            """
+            INSERT INTO payment_events (buyer_id, order_name, order_id)
+            VALUES (:buyerId, :orderName, :orderId) 
+            """.trimIndent()
 
-        val LAST_INSERT_ID_QUERY = """
-      SELECT LAST_INSERT_ID()
-    """.trimIndent()
+        val LAST_INSERT_ID_QUERY =
+            """
+            SELECT LAST_INSERT_ID()
+            """.trimIndent()
 
-        val INSERT_PAYMENT_ORDER_QUERY = fun(valueClauses: String) = """
-      INSERT INTO payment_orders (payment_event_id, seller_id, order_id, product_id, amount, payment_order_status) 
-      VALUES $valueClauses
-    """.trimIndent()
+        val INSERT_PAYMENT_ORDER_QUERY = fun(valueClauses: String) =
+            """
+            INSERT INTO payment_orders (payment_event_id, seller_id, order_id, product_id, amount, payment_order_status) 
+            VALUES $valueClauses
+            """.trimIndent()
     }
 }

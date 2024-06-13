@@ -44,6 +44,9 @@
 
     // 서버로 결제 승인에 필요한 결제 정보를 보내세요.
     async function confirm() {
+        console.log("paymentKey: " + urlParams.get("paymentKey"));
+        console.log("orderId: " + urlParams.get("orderId"));
+        console.log("amount" + urlParams.get("amount"));
         var requestData = {
             paymentKey: urlParams.get("paymentKey"),
             orderId: urlParams.get("orderId"),
