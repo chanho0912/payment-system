@@ -34,9 +34,13 @@ class PaymentConfirmService(
                         paymentFailure = it.paymentFailure
                     )
                 )
+                    .thenReturn(it)
             }
             .map {
-                PaymentConfirmationResult()
+                PaymentConfirmationResult(
+                    status = it.paymentStatus(),
+                    failure = it.paymentFailure
+                )
             }
     }
 }

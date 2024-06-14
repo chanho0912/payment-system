@@ -31,8 +31,74 @@ class R2DBCPaymentStatusUpdateRepository(
             .thenReturn(true)
     }
 
-    override fun updatePaymentStatus(paymentStatusUpdateCommand: PaymentStatusUpdateCommand): Mono<Boolean> {
-        TODO()
+    override fun updatePaymentStatus(command: PaymentStatusUpdateCommand): Mono<Boolean> {
+        return when (command.status) {
+            PaymentStatus.SUCCESS -> updatePaymentStatusToSuccess(command)
+            PaymentStatus.FAILURE -> updatePaymentStatusToFailure(command)
+            PaymentStatus.UNKNOWN -> updatePaymentStatusToUnknown(command)
+            else -> error("결제 상태 (status: ${command.status}) 는 올바르지 않은 결제 상태입니다.")
+        }
+    }
+
+
+    private fun updatePaymentStatusToSuccess(command: PaymentStatusUpdateCommand): Mono<Boolean> {
+        return selectPaymentOrderStatus(command.orderId)
+            .collectList()
+            .flatMap { insertPaymentHistory(it, command.status, "PAYMENT_CONFIRMATION_DONE") }
+            .flatMap { updatePaymentOrderStatus(command.orderId, command.status) }
+            .flatMap { updatePaymentEventExtraDetails(command) }
+            .`as`(transactionalOperator::transactional)
+            .thenReturn(true)
+    }
+
+    private fun updatePaymentEventExtraDetails(command: PaymentStatusUpdateCommand): Mono<Long> {
+        return databaseClient.sql(
+            """
+              UPDATE payment_events
+              SET order_name = :orderName, method = :method, approved_at = :approvedAt, type = :type, updated_at = CURRENT_TIMESTAMP, psp_raw_data = :pspRawData
+              WHERE order_id = :orderId
+            """.trimIndent()
+        )
+            .bind("orderName", command.paymentExtraDetails!!.orderName)
+            .bind("method", command.paymentExtraDetails.method.name)
+            .bind("approvedAt", command.paymentExtraDetails.approvedAt.toString())
+            .bind("orderId", command.orderId)
+            .bind("type", command.paymentExtraDetails.type)
+            .bind("pspRawData", command.paymentExtraDetails.pspRawData)
+            .fetch()
+            .rowsUpdated()
+    }
+
+    private fun updatePaymentStatusToFailure(command: PaymentStatusUpdateCommand): Mono<Boolean> {
+        return selectPaymentOrderStatus(command.orderId)
+            .collectList()
+            .flatMap { insertPaymentHistory(it, command.status, command.paymentFailure.toString()) }
+            .flatMap { updatePaymentOrderStatus(command.orderId, command.status) }
+            .`as`(transactionalOperator::transactional)
+            .thenReturn(true)
+    }
+
+    private fun updatePaymentStatusToUnknown(command: PaymentStatusUpdateCommand): Mono<Boolean> {
+        return selectPaymentOrderStatus(command.orderId)
+            .collectList()
+            .flatMap { insertPaymentHistory(it, command.status, command.paymentFailure.toString()) }
+            .flatMap { updatePaymentOrderStatus(command.orderId, command.status) }
+            .flatMap { incrementPaymentOrderFailedCount(command) }
+            .`as`(transactionalOperator::transactional)
+            .thenReturn(true)
+    }
+
+    private fun incrementPaymentOrderFailedCount(command: PaymentStatusUpdateCommand): Mono<Long> {
+        return databaseClient.sql(
+            """
+              UPDATE payment_orders
+              SET failed_count = failed_count + 1 
+              WHERE order_id = :orderId
+            """.trimIndent()
+        )
+            .bind("orderId", command.orderId)
+            .fetch()
+            .rowsUpdated()
     }
 
     private fun updatePaymentKey(orderId: String, paymentKey: String): Mono<Long> {
@@ -125,10 +191,10 @@ class R2DBCPaymentStatusUpdateRepository(
     }
 
     companion object {
-        val INSERT_PAYMENT_HISTORY_QUERY = fun(valueClauses: String) =
+        val INSERT_PAYMENT_HISTORY_QUERY = fun (valueClauses: String) =
             """
-            INSERT INTO payment_order_histories (payment_order_id, payment_order_status, reason)
-            VALUES $valueClauses
+                INSERT INTO payment_order_histories (payment_order_id, previous_status, new_status, reason)
+                VALUES $valueClauses
             """.trimIndent()
     }
 

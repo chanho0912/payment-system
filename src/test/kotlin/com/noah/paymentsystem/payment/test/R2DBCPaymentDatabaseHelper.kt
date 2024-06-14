@@ -1,13 +1,16 @@
 package com.noah.paymentsystem.payment.test
 
 import com.noah.paymentsystem.payment.application.domain.PaymentEvent
+import com.noah.paymentsystem.payment.application.domain.PaymentMethod
 import com.noah.paymentsystem.payment.application.domain.PaymentOrder
 import com.noah.paymentsystem.payment.application.domain.PaymentStatus
+import com.noah.paymentsystem.payment.application.domain.PaymentType
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.transaction.reactive.TransactionalOperator
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toMono
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 class R2DBCPaymentDatabaseHelper(
     private val databaseClient: DatabaseClient,
@@ -33,7 +36,11 @@ class R2DBCPaymentDatabaseHelper(
                         orderId = it[0]["order_id"] as String,
                         orderName = it[0]["order_name"] as String,
                         buyerId = it[0]["buyer_id"] as Long,
-                        isPaymentDone = it[0]["is_payment_done"] as Byte == 1.toByte(),
+                        paymentKey = it.first()["payment_key"] as String?,
+                        paymentType = if (it.first()["type"] != null) PaymentType.from(it.first()["type"] as String) else null,
+                        paymentMethod = if (it.first()["method"] != null) PaymentMethod.from(it.first()["method"] as String) else null,
+                        approvedAt = if (it.first()["approved_at"] != null) (it.first()["approved_at"] as LocalDateTime) else null,
+                        isPaymentDone = ((it.first()["is_payment_done"] as Byte).toInt() == 1),
                         paymentOrders = it.map { row ->
                             PaymentOrder(
                                 id = row["id"] as Long,
@@ -57,6 +64,7 @@ class R2DBCPaymentDatabaseHelper(
     override fun clean(): Mono<Void> {
         return databaseClient.sql(
             """
+                DELETE FROM payment_order_histories;
                 DELETE FROM payment_orders;
                 DELETE FROM payment_events;
             """.trimIndent()

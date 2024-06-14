@@ -34,6 +34,7 @@ dependencies {
 	runtimeOnly("io.asyncer:r2dbc-mysql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.projectreactor:reactor-test")
+	testImplementation("io.mockk:mockk:1.13.2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
