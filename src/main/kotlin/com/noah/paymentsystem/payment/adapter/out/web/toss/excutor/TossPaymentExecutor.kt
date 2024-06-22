@@ -1,14 +1,19 @@
 package com.noah.paymentsystem.payment.adapter.out.web.toss.excutor
 
+import com.noah.paymentsystem.payment.adapter.out.web.toss.exception.PSPConfirmationException
+import com.noah.paymentsystem.payment.adapter.out.web.toss.exception.TossPaymentError
 import com.noah.paymentsystem.payment.application.domain.PSPConfirmationStatus
 import com.noah.paymentsystem.payment.application.domain.PaymentMethod
 import com.noah.paymentsystem.payment.application.domain.PaymentType
 import com.noah.paymentsystem.payment.application.port.`in`.PaymentConfirmCommand
 import com.noah.paymentsystem.payment.application.port.out.PaymentExecutionResult
 import com.noah.paymentsystem.payment.application.port.out.PaymentExtraDetails
+import io.netty.handler.timeout.TimeoutException
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
+import reactor.util.retry.Retry
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -31,8 +36,20 @@ class TossPaymentExecutor(
             )
             .retrieve()
             .onStatus({ it.is4xxClientError || it.is5xxServerError }) { response ->
-                response.bodyToMono(String::class.java)
-                    .flatMap { Mono.error(RuntimeException(it)) }
+                response.bodyToMono(TossFailureResponse::class.java)
+                    .flatMap {
+                        val error = TossPaymentError.get(it.code)
+                        Mono.error<PSPConfirmationException>(
+                            PSPConfirmationException(
+                                errorCode = error.name,
+                                errorMessage = error.description,
+                                isSuccess = error.isSuccess(),
+                                isFailure = error.isFailure(),
+                                isUnknown = error.isUnknown(),
+                                isRetryableError = error.isRetryableError()
+                            )
+                        )
+                    }
             }
             .bodyToMono(TossPaymentConfirmResponse::class.java)
             .map {
@@ -54,6 +71,21 @@ class TossPaymentExecutor(
                     isRetryable = false
                 )
             }
+            .retryWhen(
+                Retry
+                    .backoff(2, Duration.ofSeconds(1))
+                    .jitter(0.1)
+                    .filter {
+                        (
+                            it is PSPConfirmationException
+                                && it.isRetryableError
+                            )
+                            || it is TimeoutException
+                    }
+                    .onRetryExhaustedThrow { _, retrySignal ->
+                        retrySignal.failure() as PSPConfirmationException
+                    }
+            )
     }
 
     companion object {
