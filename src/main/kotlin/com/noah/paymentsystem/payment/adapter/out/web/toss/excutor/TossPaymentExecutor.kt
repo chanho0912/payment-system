@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter
 @Component
 class TossPaymentExecutor(
     private val tossPaymentWebClient: WebClient,
+    private val uri: String = TossPaymentExecutor.uri
 ) : PaymentExecutor {
 
     override fun execute(command: PaymentConfirmCommand): Mono<PaymentExecutionResult> {
@@ -81,6 +82,9 @@ class TossPaymentExecutor(
                                 && it.isRetryableError
                             )
                             || it is TimeoutException
+                    }
+                    .doBeforeRetry {
+                        println("before retry hook ... count: ${it.totalRetries()}")
                     }
                     .onRetryExhaustedThrow { _, retrySignal ->
                         retrySignal.failure() as PSPConfirmationException
