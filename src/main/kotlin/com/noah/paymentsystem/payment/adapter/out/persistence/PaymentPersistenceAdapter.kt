@@ -5,10 +5,13 @@ import com.noah.paymentsystem.payment.adapter.out.persistence.repository.Payment
 import com.noah.paymentsystem.payment.adapter.out.persistence.repository.PaymentStatusUpdateRepository
 import com.noah.paymentsystem.payment.adapter.out.persistence.repository.PaymentValidationRepository
 import com.noah.paymentsystem.payment.application.domain.PaymentEvent
+import com.noah.paymentsystem.payment.application.domain.PendingPaymentEvent
+import com.noah.paymentsystem.payment.application.port.out.LoadPendingPaymentPort
 import com.noah.paymentsystem.payment.application.port.out.PaymentStatusUpdateCommand
 import com.noah.paymentsystem.payment.application.port.out.PaymentStatusUpdatePort
 import com.noah.paymentsystem.payment.application.port.out.PaymentValidationPort
 import com.noah.paymentsystem.payment.application.port.out.SavePaymentPort
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 @PersistenceAdapter
@@ -18,7 +21,8 @@ class PaymentPersistenceAdapter(
     private val paymentValidationRepository: PaymentValidationRepository
 ) : SavePaymentPort,
     PaymentStatusUpdatePort,
-    PaymentValidationPort {
+    PaymentValidationPort,
+    LoadPendingPaymentPort {
     override fun savePayment(paymentEvent: PaymentEvent): Mono<Void> {
         return paymentRepository.save(paymentEvent)
     }
@@ -33,6 +37,10 @@ class PaymentPersistenceAdapter(
 
     override fun isValid(orderId: String, amount: Long): Mono<Boolean> {
         return paymentValidationRepository.isValid(orderId, amount)
+    }
+
+    override fun getPendingPayment(): Flux<PendingPaymentEvent> {
+        return paymentRepository.getPendingPayment()
     }
 
 }

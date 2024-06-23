@@ -18,6 +18,15 @@ data class PaymentStatusUpdateCommand(
     val paymentExtraDetails: PaymentExtraDetails? = null,
     val paymentFailure: PaymentFailure? = null
 ) {
+
+    constructor(paymentExecutionResult: PaymentExecutionResult) : this(
+        paymentKey = paymentExecutionResult.paymentKey,
+        orderId = paymentExecutionResult.orderId,
+        status = paymentExecutionResult.paymentStatus(),
+        paymentExtraDetails = paymentExecutionResult.extraDetails,
+        paymentFailure = paymentExecutionResult.paymentFailure
+    )
+
     init {
         require(status == PaymentStatus.SUCCESS || status == FAILURE || status == PaymentStatus.UNKNOWN) {
             "status should be one of SUCCESS, FAILURE, UNKNOWN"
