@@ -36,7 +36,9 @@ class PaymentConfirmServiceTest(
     @Autowired private val checkoutUsecase: CheckoutUsecase,
     @Autowired private val paymentStatusUpdatePort: PaymentStatusUpdatePort,
     @Autowired private val paymentValidationPort: PaymentValidationPort,
-    @Autowired private val paymentDatabaseHelper: PaymentDatabaseHelper
+    @Autowired private val paymentDatabaseHelper: PaymentDatabaseHelper,
+    @Autowired private val paymentErrorHandler: PaymentErrorHandler
+
 ) {
 
     private val mockPaymentExecutorPort = mockk<PaymentExecutorPort>()
@@ -70,6 +72,7 @@ class PaymentConfirmServiceTest(
             paymentStatusUpdatePort = paymentStatusUpdatePort,
             paymentValidationPort = paymentValidationPort,
             paymentExecutorPort = mockPaymentExecutorPort,
+            paymentErrorHandler = paymentErrorHandler
         )
 
         val paymentExecutionResult = PaymentExecutionResult(
@@ -129,6 +132,7 @@ class PaymentConfirmServiceTest(
             paymentStatusUpdatePort = paymentStatusUpdatePort,
             paymentValidationPort = paymentValidationPort,
             paymentExecutorPort = mockPaymentExecutorPort,
+            paymentErrorHandler = paymentErrorHandler
         )
 
         val paymentExecutionResult = PaymentExecutionResult(

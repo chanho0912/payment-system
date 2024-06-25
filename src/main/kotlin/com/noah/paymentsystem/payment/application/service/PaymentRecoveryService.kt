@@ -17,7 +17,8 @@ class PaymentRecoveryService(
     private val loadPendingPaymentPort: LoadPendingPaymentPort,
     private val paymentValidationPort: PaymentValidationPort,
     private val paymentStatusUpdatePort: PaymentStatusUpdatePort,
-    private val paymentExecutorPort: PaymentExecutorPort
+    private val paymentExecutorPort: PaymentExecutorPort,
+    private val paymentErrorHandler: PaymentErrorHandler
 ) : PaymentRecoveryUsecase {
 
     private val scheduler = Schedulers.newSingle("recovery-scheduler")
@@ -38,6 +39,12 @@ class PaymentRecoveryService(
                 paymentValidationPort.isValid(command.orderId, command.amount).thenReturn(command)
                     .flatMap { paymentExecutorPort.execute(it) }
                     .flatMap { paymentStatusUpdatePort.updatePaymentStatus(PaymentStatusUpdateCommand(it))  }
+                    .onErrorResume {
+                        paymentErrorHandler.handlePaymentError(
+                            it, command
+                        )
+                            .thenReturn(true)
+                    }
             }
             .sequential()
             .subscribeOn(scheduler)

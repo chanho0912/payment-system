@@ -35,7 +35,8 @@ class PaymentRecoveryServiceTest(
     @Autowired private val paymentValidationPort: PaymentValidationPort,
     @Autowired private val paymentStatusUpdatePort: PaymentStatusUpdatePort,
     @Autowired private val checkoutUsecase: CheckoutUsecase,
-    @Autowired private val paymentDatabaseHelper: PaymentDatabaseHelper
+    @Autowired private val paymentDatabaseHelper: PaymentDatabaseHelper,
+    @Autowired private val paymentErrorHandler: PaymentErrorHandler
 ) {
 
     @BeforeEach
@@ -58,7 +59,8 @@ class PaymentRecoveryServiceTest(
             loadPendingPaymentPort = loadPendingPaymentPort,
             paymentValidationPort = paymentValidationPort,
             paymentStatusUpdatePort = paymentStatusUpdatePort,
-            paymentExecutorPort = mockPaymentExecutorPort
+            paymentExecutorPort = mockPaymentExecutorPort,
+            paymentErrorHandler = paymentErrorHandler
         )
 
         paymentRecoveryService.recovery()
