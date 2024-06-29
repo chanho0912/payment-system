@@ -28,7 +28,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
-    testAndDevelopmentOnly("org.springframework.boot:spring-boot-docker-compose")
+//    implementation("org.springframework.cloud:spring-cloud-stream")
+//    implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka-reactive")
+    implementation("org.springframework.kafka:spring-kafka")
+
+//    testAndDevelopmentOnly("org.springframework.boot:spring-boot-docker-compose")
     testImplementation("org.springframework.boot:spring-boot-testcontainers:3.3.0")
 
     runtimeOnly("com.mysql:mysql-connector-j")
@@ -39,6 +43,14 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
+//extra["springCloudVersion"] = "2023.0.0"
+//
+//dependencyManagement {
+//    imports {
+//        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+//    }
+//}
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
