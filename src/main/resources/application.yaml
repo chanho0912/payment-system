@@ -1,28 +1,57 @@
 spring:
   application:
     name: payment-system
-#  docker:
-#    compose:
-#      skip:
-#        in-tests: false
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      group-id: foo
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  docker:
+    compose:
+      skip:
+        in-tests: false
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#    consumer:
+#      group-id: foo
+#      auto-offset-reset: earliest
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#    producer:
+#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+#      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   r2dbc:
     url: r2dbc:mysql://localhost:3306/payment
     username: root
     password: 1234
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: pkc-gq2xn.asia-northeast3.gcp.confluent.cloud:9092
+          configuration:
+            security:
+              protocol: SASL_SSL
+            sasl:
+              jaas:
+                config: org.apache.kafka.common.security.plain.PlainLoginModule required username='KQQZKP7C67B3HQC5' password='iS4Km9NyntpNEtsgE/gpGS9S5h1C5/HaRL2E1HQyfnicZRNytqH3q42tUnhwq5x/';
+              mechanism: PLAIN
+            client:
+              dns:
+                lookup: use_all_dns_ips
+
+          required-acks: all
+          auto-create-topics: false
+
+      bindings:
+        consume-in-0:
+          destination: payment
+          group: payment-service
 
 PSP:
   toss:
     secretKey: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
     url: https://api.tosspayments.com
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: bindings

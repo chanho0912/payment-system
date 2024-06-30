@@ -38,7 +38,7 @@ class R2DBCPaymentDatabaseHelper(
                         buyerId = it[0]["buyer_id"] as Long,
                         paymentKey = it.first()["payment_key"] as String?,
                         paymentType = if (it.first()["type"] != null) PaymentType.from(it.first()["type"] as String) else null,
-                        paymentMethod = if (it.first()["method"] != null) PaymentMethod.from(it.first()["method"] as String) else null,
+                        paymentMethod = if (it.first()["method"] != null) PaymentMethod.valueOf(it.first()["method"] as String) else null,
                         approvedAt = if (it.first()["approved_at"] != null) (it.first()["approved_at"] as LocalDateTime) else null,
                         isPaymentDone = ((it.first()["is_payment_done"] as Byte).toInt() == 1),
                         paymentOrders = it.map { row ->
