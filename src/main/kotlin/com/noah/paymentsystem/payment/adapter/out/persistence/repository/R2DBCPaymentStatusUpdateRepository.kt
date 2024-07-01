@@ -1,8 +1,10 @@
 package com.noah.paymentsystem.payment.adapter.out.persistence.repository
 
 import com.noah.paymentsystem.payment.adapter.out.persistence.exception.PaymentAlreadyProcessedException
+import com.noah.paymentsystem.payment.application.domain.PaymentEventMessagePublisher
 import com.noah.paymentsystem.payment.application.domain.PaymentStatus
 import com.noah.paymentsystem.payment.application.port.out.PaymentStatusUpdateCommand
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.r2dbc.core.DatabaseClient
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.reactive.TransactionalOperator
@@ -12,7 +14,9 @@ import reactor.core.publisher.Mono
 @Repository
 class R2DBCPaymentStatusUpdateRepository(
     private val databaseClient: DatabaseClient,
-    private val transactionalOperator: TransactionalOperator
+    private val transactionalOperator: TransactionalOperator,
+    private val paymentOutboxRepository: PaymentOutboxRepository,
+    private val paymentEventPublisher: PaymentEventMessagePublisher
 ) : PaymentStatusUpdateRepository {
     override fun updatePaymentStatusToExecuting(orderId: String, paymentKey: String): Mono<Boolean> {
         return checkPreviousPaymentOrderStatus(orderId)
@@ -47,6 +51,8 @@ class R2DBCPaymentStatusUpdateRepository(
             .flatMap { insertPaymentHistory(it, command.status, "PAYMENT_CONFIRMATION_DONE") }
             .flatMap { updatePaymentOrderStatus(command.orderId, command.status) }
             .flatMap { updatePaymentEventExtraDetails(command) }
+            .flatMap { paymentOutboxRepository.insertOutbox(command) }
+            .flatMap { paymentEventPublisher.publishEvent(it) }
             .`as`(transactionalOperator::transactional)
             .thenReturn(true)
     }
@@ -191,7 +197,7 @@ class R2DBCPaymentStatusUpdateRepository(
     }
 
     companion object {
-        val INSERT_PAYMENT_HISTORY_QUERY = fun (valueClauses: String) =
+        val INSERT_PAYMENT_HISTORY_QUERY = fun(valueClauses: String) =
             """
                 INSERT INTO payment_order_histories (payment_order_id, previous_status, new_status, reason)
                 VALUES $valueClauses
