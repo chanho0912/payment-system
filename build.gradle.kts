@@ -30,12 +30,14 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    implementation("io.github.oshai:kotlin-logging-jvm:5.1.0")
+
     implementation("org.springframework.cloud:spring-cloud-stream")
     implementation("org.springframework.cloud:spring-cloud-stream-binder-kafka-reactive")
 //    implementation("org.springframework.kafka:spring-kafka")
 
-    testAndDevelopmentOnly("org.springframework.boot:spring-boot-docker-compose")
-    testImplementation("org.springframework.boot:spring-boot-testcontainers:3.3.0")
+//    testAndDevelopmentOnly("org.springframework.boot:spring-boot-docker-compose")
+//    testImplementation("org.springframework.boot:spring-boot-testcontainers:3.3.0")
 
     runtimeOnly("com.mysql:mysql-connector-j")
     runtimeOnly("io.asyncer:r2dbc-mysql")

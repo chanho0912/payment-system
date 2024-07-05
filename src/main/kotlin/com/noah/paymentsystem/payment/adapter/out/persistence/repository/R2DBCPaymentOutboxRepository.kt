@@ -3,6 +3,7 @@ package com.noah.paymentsystem.payment.adapter.out.persistence.repository
 import com.noah.paymentsystem.common.objectMapper
 import com.noah.paymentsystem.payment.adapter.out.stream.util.PartitionKeyUtil
 import com.noah.paymentsystem.payment.application.domain.PaymentEventMessage
+import com.noah.paymentsystem.payment.application.domain.PaymentEventMessageType
 import com.noah.paymentsystem.payment.application.domain.PaymentEventMessageType.PAYMENT_CONFIRMATION_SUCCESS
 import com.noah.paymentsystem.payment.application.domain.PaymentStatus
 import com.noah.paymentsystem.payment.application.port.out.PaymentStatusUpdateCommand
@@ -30,6 +31,38 @@ class R2DBCPaymentOutboxRepository(
             .fetch()
             .rowsUpdated()
             .thenReturn(paymentEventMessage)
+    }
+
+    override fun markMessageAsSent(idempotencyKey: String, type: PaymentEventMessageType): Mono<Boolean> {
+        return databaseClient.sql(
+            """
+                update outboxes
+                set status = 'SUCCESS'
+                where idempotency_key = :idempotencyKey
+                and type = :type
+            """.trimIndent()
+        )
+            .bind("idempotencyKey", idempotencyKey)
+            .bind("type", type.name)
+            .fetch()
+            .rowsUpdated()
+            .thenReturn(true)
+    }
+
+    override fun markMessageAsFailure(idempotencyKey: String, type: PaymentEventMessageType): Mono<Boolean> {
+        return databaseClient.sql(
+            """
+                update outboxes
+                set status = 'FAILURE'
+                where idempotency_key = :idempotencyKey
+                and type = :type
+            """.trimIndent()
+        )
+            .bind("idempotencyKey", idempotencyKey)
+            .bind("type", type.name)
+            .fetch()
+            .rowsUpdated()
+            .thenReturn(true)
     }
 
     private fun createPaymentEventMessage(command: PaymentStatusUpdateCommand) =

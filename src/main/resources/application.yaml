@@ -1,10 +1,10 @@
 spring:
   application:
     name: payment-system
-  docker:
-    compose:
-      skip:
-        in-tests: false
+#  docker:
+#    compose:
+#      skip:
+#        in-tests: false
 #  kafka:
 #    bootstrap-servers: localhost:9092
 #    consumer:
@@ -39,9 +39,13 @@ spring:
 
           required-acks: all
           auto-create-topics: false
+        bindings:
+          send-out-0:
+            producer:
+              record-metadata-channel: payment-result
 
       bindings:
-        consume-in-0:
+        send-out-0:
           destination: payment
           group: payment-service
 

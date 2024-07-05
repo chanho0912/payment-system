@@ -17,8 +17,8 @@ import com.noah.paymentsystem.payment.test.PaymentDatabaseHelper
 import com.noah.paymentsystem.payment.test.PaymentTestConfiguration
 import io.mockk.every
 import io.mockk.mockk
-import junit.framework.TestCase.assertTrue
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
